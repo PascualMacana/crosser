@@ -1,0 +1,12 @@
+[package]
+name = "cruzante"
+version = "0.1.0"
+edition = "2021"
+description = "Constructor que reescribe el plan donde el río lo mata."
+license = "MIT"
+publish = false
+repository = "https://github.com/PascualMacana/cruzante"
+
+[[bin]]
+name = "cruzante"
+path = "src/main.rs"

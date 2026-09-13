@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 230" role="img" aria-label="A plan that keeps the crossings that did not kill anyone">
+  <rect width="800" height="230" rx="16" fill="#f4f6f3"/>
+  <text x="400" y="28" text-anchor="middle" fill="#3d4a3a" font-family="Georgia, serif" font-size="15">the child keeps the trips that were still legal</text>
+
+  <!-- 1 start -->
+  <g transform="translate(100 120)">
+    <rect x="-70" y="-40" width="55" height="70" rx="6" fill="#d7f0c8" stroke="#2f7a32" stroke-width="2"/>
+    <rect x="15" y="-40" width="55" height="70" rx="6" fill="#e8ece6" stroke="#8a9586" stroke-width="2"/>
+    <text x="-42" y="-18" text-anchor="middle" fill="#2f7a32" font-family="ui-monospace, monospace" font-size="10">@ L C K</text>
+    <text x="42" y="-18" text-anchor="middle" fill="#8a9586" font-family="ui-monospace, monospace" font-size="10">·</text>
+    <text y="50" text-anchor="middle" fill="#5b6758" font-family="Georgia, serif" font-size="12">start</text>
+  </g>
+
+  <path d="M160 120 L208 120" stroke="#8a9586" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- 2 fail -->
+  <g transform="translate(280 120)">
+    <rect x="-70" y="-40" width="55" height="70" rx="6" fill="#f3d0d0" stroke="#b24a4a" stroke-width="2"/>
+    <rect x="15" y="-40" width="55" height="70" rx="6" fill="#e8ece6" stroke="#8a9586" stroke-width="2"/>
+    <text x="-42" y="-18" text-anchor="middle" fill="#b24a4a" font-family="ui-monospace, monospace" font-size="10">C K</text>
+    <text x="42" y="-18" text-anchor="middle" fill="#b24a4a" font-family="ui-monospace, monospace" font-size="10">@ L</text>
+    <text y="50" text-anchor="middle" fill="#5b6758" font-family="Georgia, serif" font-size="12">goat eats</text>
+  </g>
+
+  <path d="M340 120 L388 120" stroke="#8a9586" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- 3 inherit -->
+  <g transform="translate(470 120)">
+    <rect x="-70" y="-40" width="55" height="70" rx="6" fill="#f3e7b0" stroke="#c4a035" stroke-width="2"/>
+    <rect x="15" y="-40" width="55" height="70" rx="6" fill="#e8ece6" stroke="#8a9586" stroke-width="2"/>
+    <text x="-42" y="-18" text-anchor="middle" fill="#8a7018" font-family="ui-monospace, monospace" font-size="10">L K</text>
+    <text x="42" y="-18" text-anchor="middle" fill="#8a7018" font-family="ui-monospace, monospace" font-size="10">@ C</text>
+    <text y="50" text-anchor="middle" fill="#5b6758" font-family="Georgia, serif" font-size="12">keep prefix</text>
+  </g>
+
+  <path d="M530 120 L578 120" stroke="#8a9586" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- 4 crossed -->
+  <g transform="translate(670 120)">
+    <rect x="-70" y="-40" width="55" height="70" rx="6" fill="#e8ece6" stroke="#8a9586" stroke-width="2"/>
+    <rect x="15" y="-40" width="55" height="70" rx="6" fill="#cfeee9" stroke="#1e6f6a" stroke-width="2"/>
+    <text x="-42" y="-18" text-anchor="middle" fill="#8a9586" font-family="ui-monospace, monospace" font-size="10">·</text>
+    <text x="42" y="-18" text-anchor="middle" fill="#1e6f6a" font-family="ui-monospace, monospace" font-size="10">@ L C K</text>
+    <text y="50" text-anchor="middle" fill="#5b6758" font-family="Georgia, serif" font-size="12">crossed</text>
+  </g>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L8 4 L0 8 z" fill="#8a9586"/>
+    </marker>
+  </defs>
+</svg>

@@ -1,34 +1,34 @@
 # cruzante
 
-A small Rust program that tries to get a wolf, a goat, and a cabbage across a river, and **writes a child that keeps the trips that were still legal**.
+Un programa chico en Rust que intenta pasar un lobo, una cabra y un col al otro lado del río, y **escribe un hijo que se queda con los viajes que todavía eran legales**.
 
-It is not a language model and it does not spread by itself. You point it at a folder; it only writes there.
+No es un modelo de lenguaje y no se copia solo. Le señalás una carpeta; sólo escribe ahí.
 
-It is a sibling of the constructors that copy, search, prove, or chase a moving world. Those stay as they are. This one uses the same mold (embedded genome, one child, explicit destination) on a frozen riddle: the boat holds the farmer and one passenger. The wolf cannot be left with the goat. The goat cannot be left with the cabbage.
+Es hermano de los constructores que se copian, buscan, prueban o persiguen un mundo que se mueve. Esos quedan como están. Este usa el mismo molde (genoma embebido, un hijo, destino explícito) sobre un acertijo congelado: el bote lleva al barquero y a un pasajero. El lobo no puede quedar con la cabra. La cabra no puede quedar con el col.
 
-The part that evolves is a **plan**: a list of cargo (`lobo`, `cabra`, `col`, `nada`). The farmer always rows. If a move is illegal or someone gets eaten, that is the birth. The child inherits the prefix that survived and rewrites from the failure. It does not shuffle the trips that already worked.
+Lo que evoluciona es un **plan**: una lista de cargas (`lobo`, `cabra`, `col`, `nada`). El barquero rema siempre. Si un viaje es ilegal o alguien se come a alguien, ese es el parto. El hijo hereda el prefijo que sobrevivió y reescribe desde el fracaso. No baraja los viajes que ya servían.
 
 ```
-parent    plan  lobo                         goat eats cabbage
-  │ keep nothing (the first trip killed)
+padre     plan  lobo                         la cabra se come el col
+  │ no guarda nada (el primer viaje mató)
   ▼
-          plan  cabra                        legal so far
-  │ keep that trip, change the next
+          plan  cabra                        legal hasta acá
+  │ guarda ese viaje, cambia el siguiente
   ▼
-child     plan  cabra nada lobo cabra col nada cabra
+hijo      plan  cabra nada lobo cabra col nada cabra
 ```
 
-![Two river banks: a failed trip is discarded, the legal prefix is kept](cell.svg)
+![Dos orillas: se descarta el viaje que mató, se guarda el prefijo legal](cell.svg)
 
-Watch it happen in the terminal. Left bank, water, right bank. The farmer is `@`. `dish` defaults to seed 7.
+Míralo en la terminal. Orilla izquierda, agua, orilla derecha. El barquero es `@`. `dish` usa por defecto la seed 7.
 
 ```bash
 cargo run -- dish
 ```
 
-## Run it
+## Cómo correrlo
 
-You need [Rust](https://rustup.rs/).
+Hace falta [Rust](https://rustup.rs/).
 
 ```bash
 cargo build --release
@@ -37,56 +37,56 @@ cargo build --release
 ./hijo/target/debug/cruzante identity
 ```
 
-`identity` prints generation, plan, and who is on each bank.  
-`evolve --spawn ./hijo --build` searches, keeps legal prefixes, and writes a child crate with the winning (or best) plan.
+`identity` imprime generación, plan y quién está en cada orilla.  
+`evolve --spawn ./hijo --build` busca, conserva prefijos legales, y escribe un crate hijo con el plan ganador (o el mejor).
 
-## Commands
+## Comandos
 
 ```
-cruzante identity              generation, lineage, plan, banks
-cruzante eval [plan]           simulate this plan, or the current one
-cruzante evolve                search; mutants copy the legal prefix
-                 --steps N      search steps (default 80)
-                 --lambda L     mutants per step (default 20)
-                 --seed S       reproducible RNG
-                 --spawn <dir>  write a child with the winner
-                 --build        compile that child
-                 --force        overwrite a previous child
-                 --write        update src/main.rs in this project
-cruzante dish                  animate the two banks
-                 --steps N      search steps (default 80)
-                 --lambda L     mutants per step (default 20)
+cruzante identity              generación, linaje, plan, orillas
+cruzante eval [plan]           simula este plan, o el actual
+cruzante evolve                busca; los mutantes copian el prefijo legal
+                 --steps N      pasos de búsqueda (default 80)
+                 --lambda L     mutantes por paso (default 20)
+                 --seed S       rng reproducible
+                 --spawn <dir>  hijo con el campeón
+                 --build        compila a ese hijo
+                 --force        pisa un hijo anterior
+                 --write        pisa src/main.rs de este proyecto
+cruzante dish                  anima las dos orillas
+                 --steps N      pasos de búsqueda (default 80)
+                 --lambda L     mutantes por paso (default 20)
                  --seed S       default 7
-                 --delay MS     ms per frame (default 80)
-cruzante spawn <dir>           copy the current genome (no search)
-cruzante genome                print the embedded sources
+                 --delay MS     ms por cuadro (default 80)
+cruzante spawn <dir>           copia el genoma actual (sin buscar)
+cruzante genome                imprime las fuentes embebidas
 ```
 
-`--spawn` leaves this program alone and writes a selected child.  
-`--write` edits this project's `src/main.rs`; rebuild so the binary picks up the new plan.
+`--spawn` deja este programa en paz y escribe un hijo elegido.  
+`--write` edita el `src/main.rs` de este proyecto; compilá de nuevo para que el binario nazca con el plan nuevo.
 
-## How it works
+## Cómo funciona
 
-The plan lives in a constant in `src/main.rs`.
+El plan vive en una constante de `src/main.rs`.
 
-1. Parse the current plan into cargo tokens.
-2. Simulate from the left bank. Stop at the first illegal move or the first eating.
-3. Each mutant **copies the legal prefix** and only changes what comes after.
-4. Lower score is better: a full crossing beats a long prefix; a shorter winning plan beats a longer one.
-5. With `--spawn`, write a full Cargo project whose source contains that plan.
+1. Parsea el plan actual a tokens de carga.
+2. Simula desde la orilla izquierda. Para en el primer viaje ilegal o en la primera comida.
+3. Cada mutante **copia el prefijo legal** y sólo cambia lo que viene después.
+4. Menor puntaje es mejor: un cruce completo le gana a un prefijo largo; un plan ganador más corto le gana a uno más largo.
+5. Con `--spawn`, escribe un proyecto Cargo completo cuya fuente contiene ese plan.
 
-There is no pathfinding algorithm inside. The river never changes. This is not a Gödel certificate: anyone can re-run `eval` on the plan.
+No hay un algoritmo de caminos adentro. El río no cambia. Esto no es un certificado de Gödel: cualquiera puede volver a correr `eval` sobre el plan.
 
-## Safety
+## Seguridad
 
-- One child per run. No background loops, no network.
-- It will not write over your home directory, `/`, `/usr`, `/etc`, or the directory you are standing in.
-- `--force` only deletes a folder that already looks like a `cruzante` project.
+- Un hijo por corrida. No hay bucles en segundo plano ni red.
+- No escribe sobre el directorio home, `/`, `/usr`, `/etc`, ni el directorio en el que estás parado.
+- `--force` sólo borra una carpeta que ya parece un proyecto `cruzante`.
 
-## Related
+## Relacionados
 
-The mold (untouched):  
-[replicante](https://github.com/PascualMacana/replicante) copies itself.  
-[mejorante](https://github.com/PascualMacana/mejorante) searches against a frozen curve.  
-[demostrante](https://github.com/PascualMacana/demostrante) only writes a claimed improvement with a checkable proof.  
-[reinante](https://github.com/PascualMacana/reinante) keeps searching because the target itself moves.
+El molde (sin reabrir):  
+[replicante](https://github.com/PascualMacana/replicante) se copia.  
+[mejorante](https://github.com/PascualMacana/mejorante) busca contra una curva congelada.  
+[demostrante](https://github.com/PascualMacana/demostrante) sólo escribe una mejora afirmada si hay una prueba verificable.  
+[reinante](https://github.com/PascualMacana/reinante) sigue buscando porque el objetivo mismo se mueve.

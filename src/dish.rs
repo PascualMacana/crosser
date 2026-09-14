@@ -1,31 +1,31 @@
-//! Plato de Petri: dos orillas. Es la imagen de `evolve`, sin escribir archivos.
+//! Plato de Petri: dos orillas y el linaje de decisiones.
 
-use crate::{evolve_on, Champion, Tick, World};
+use crate::{evolve_on, Champion, Decision, Tick, World};
 use std::error::Error;
 use std::io::{self, Write};
 use std::thread;
 use std::time::Duration;
 
 const WIDTH: usize = 63;
-const HEIGHT: usize = 15;
+const HEIGHT: usize = 21;
 
 pub fn run(steps: u32, lambda: u32, seed: u64, delay_ms: u64) -> Result<(), Box<dyn Error>> {
     let _cursor = HideCursor::new();
-    let mut last: Option<(u32, Champion, Tick)> = None;
+    let mut last: Option<(u32, Champion, Tick, Vec<Decision>)> = None;
 
-    evolve_on(steps, lambda, seed, |step, champ, tick| {
+    evolve_on(steps, lambda, seed, |step, champ, tick, lin| {
         if matches!(tick, Tick::Start | Tick::Better | Tick::Solved) {
             for frame in &champ.run.frames {
-                let _ = present(step, champ, tick, &frame.world);
+                let _ = present(step, champ, tick, &frame.world, lin);
                 sleep(delay_ms);
             }
             sleep(delay_ms.saturating_mul(2));
-            last = Some((step, champ.clone(), tick));
+            last = Some((step, champ.clone(), tick, lin.to_vec()));
         }
     })?;
 
-    if let Some((step, champ, tick)) = last {
-        let _ = present(step, &champ, tick, &champ.run.world);
+    if let Some((step, champ, tick, lin)) = last {
+        let _ = present(step, &champ, tick, &champ.run.world, &lin);
         sleep(delay_ms.saturating_mul(4));
     }
     Ok(())
@@ -91,7 +91,13 @@ impl Canvas {
     }
 }
 
-fn present(step: u32, champ: &Champion, tick: Tick, world: &World) -> io::Result<()> {
+fn present(
+    step: u32,
+    champ: &Champion,
+    tick: Tick,
+    world: &World,
+    lineage: &[Decision],
+) -> io::Result<()> {
     let mut c = Canvas::new(WIDTH, HEIGHT);
     let color = if champ.run.won {
         36
@@ -105,6 +111,7 @@ fn present(step: u32, champ: &Champion, tick: Tick, world: &World) -> io::Result
     put_bank(&mut c, 40, 4, &world.right, !world.farmer_left, color);
     let boat_x = if world.farmer_left { 18 } else { 32 };
     c.puts(boat_x, 8, "[@]", color);
+    put_lineage(&mut c, 1, 13, lineage);
 
     let mut out = String::with_capacity(WIDTH * HEIGHT * 8);
     out.push_str("\x1b[H");
@@ -146,6 +153,7 @@ fn present(step: u32, champ: &Champion, tick: Tick, world: &World) -> io::Result
         champ.run.summary()
     ));
     out.push_str(&format!("  plan  {plan}\x1b[K\n"));
+    out.push_str("  linaje  = kept  x dumped  + wrote\x1b[K\n");
     let mut stdout = io::stdout();
     stdout.write_all(out.as_bytes())?;
     stdout.flush()
@@ -175,6 +183,47 @@ fn put_bank(c: &mut Canvas, x: i32, y: i32, side: &crate::Side, farmer: bool, co
     if !farmer && side.labels().is_empty() {
         c.puts(x, row, "·", 90);
     }
+}
+
+fn put_lineage(c: &mut Canvas, x: i32, y: i32, lineage: &[Decision]) {
+    c.puts(x, y, "linaje", 90);
+    if lineage.is_empty() {
+        c.puts(x + 8, y, "(start)", 90);
+        return;
+    }
+    let shown = lineage.len().min(7);
+    let start = lineage.len() - shown;
+    for (i, d) in lineage[start..].iter().enumerate() {
+        let row = y + 1 + i as i32;
+        let line = format!("{:>3} {}", d.step, crate::format_decision(d));
+        let mut col = x;
+        for (j, ch) in line.chars().enumerate() {
+            if col >= WIDTH as i32 - 1 {
+                break;
+            }
+            let color = lineage_color(&line, j);
+            c.put(col, row, ch, color);
+            col += 1;
+        }
+    }
+}
+
+fn lineage_color(line: &str, idx: usize) -> u8 {
+    let bytes: Vec<char> = line.chars().collect();
+    let mut mark = 90u8;
+    for (i, ch) in bytes.iter().enumerate() {
+        if i > idx {
+            break;
+        }
+        match ch {
+            '=' => mark = 32,
+            'x' => mark = 31,
+            '+' => mark = 36,
+            ' ' => mark = 90,
+            _ => {}
+        }
+    }
+    mark
 }
 
 #[cfg(test)]

@@ -155,6 +155,7 @@ plan: {plan}
   cruzante identity              generación, linaje, plan, orillas
   cruzante eval [plan]           simula este plan, o el cerebro actual
   cruzante evolve                busca; el mutante copia el prefijo legal
+                                 al final imprime el linaje (= se quedó  x se tiró  + se escribió)
                    --steps N      default {DEFAULT_STEPS}
                    --lambda L     mutantes por paso, default {DEFAULT_LAMBDA}
                    --seed S       rng reproducible
@@ -162,7 +163,7 @@ plan: {plan}
                    --build        compila al hijo
                    --force        pisa un hijo anterior
                    --write        pisa src/main.rs de este proyecto
-  cruzante dish                  anima las dos orillas
+  cruzante dish                  anima las dos orillas y el linaje
                    --steps N      default {DEFAULT_STEPS}
                    --lambda L     default {DEFAULT_LAMBDA}
                    --seed S       default {DEFAULT_DISH_SEED} (demo)
@@ -306,7 +307,7 @@ fn entropy_seed() -> u64 {
 
 fn evolve_cmd(args: Vec<String>) -> Result<(), Box<dyn Error>> {
     let opts = parse_evolve_opts(args)?;
-    let champ = evolve_on(opts.steps, opts.lambda, opts.seed, |step, best, tick| {
+    let (champ, lineage) = evolve_on(opts.steps, opts.lambda, opts.seed, |step, best, tick, lin| {
         if matches!(tick, Tick::Start | Tick::Better | Tick::Solved) {
             let mark = match tick {
                 Tick::Start => "",
@@ -320,8 +321,14 @@ fn evolve_cmd(args: Vec<String>) -> Result<(), Box<dyn Error>> {
                 best.run.summary(),
                 emit_plan(&best.plan)
             );
+            if let Some(d) = lin.last() {
+                if !matches!(tick, Tick::Start) {
+                    println!("           {}", format_decision(d));
+                }
+            }
         }
     })?;
+    print_lineage(&lineage);
 
     println!();
     println!("seed       {}", opts.seed);
@@ -351,7 +358,16 @@ fn evolve_cmd(args: Vec<String>) -> Result<(), Box<dyn Error>> {
 
 #[cfg(test)]
 fn evolve(steps: u32, lambda: u32, seed: u64) -> Result<Champion, Box<dyn Error>> {
-    evolve_on(steps, lambda, seed, |step, best, tick| {
+    Ok(evolve_with_lineage(steps, lambda, seed)?.0)
+}
+
+#[cfg(test)]
+fn evolve_with_lineage(
+    steps: u32,
+    lambda: u32,
+    seed: u64,
+) -> Result<(Champion, Vec<Decision>), Box<dyn Error>> {
+    evolve_on(steps, lambda, seed, |step, best, tick, lin| {
         if matches!(tick, Tick::Start | Tick::Better | Tick::Solved) {
             let mark = match tick {
                 Tick::Start => "",
@@ -365,6 +381,11 @@ fn evolve(steps: u32, lambda: u32, seed: u64) -> Result<Champion, Box<dyn Error>
                 best.run.summary(),
                 emit_plan(&best.plan)
             );
+            if let Some(d) = lin.last() {
+                if !matches!(tick, Tick::Start) {
+                    println!("           {}", format_decision(d));
+                }
+            }
         }
     })
 }
@@ -381,14 +402,15 @@ pub(crate) fn evolve_on<F>(
     lambda: u32,
     seed: u64,
     mut hook: F,
-) -> Result<Champion, Box<dyn Error>>
+) -> Result<(Champion, Vec<Decision>), Box<dyn Error>>
 where
-    F: FnMut(u32, &Champion, Tick),
+    F: FnMut(u32, &Champion, Tick, &[Decision]),
 {
     let mut rng = Rng::new(seed);
     let plan = parse_plan(BRAIN)?;
     let mut best = Champion::from_plan(plan);
-    hook(0, &best, Tick::Start);
+    let mut lineage: Vec<Decision> = Vec::new();
+    hook(0, &best, Tick::Start, &lineage);
     for step in 1..=steps {
         let mut winner = best.clone();
         for _ in 0..lambda {
@@ -403,11 +425,69 @@ where
         }
         if winner.score < best.score {
             let solved = winner.run.won && !best.run.won;
+            lineage.push(decide(step, &best.plan, &winner.plan));
             best = winner;
-            hook(step, &best, if solved { Tick::Solved } else { Tick::Better });
+            hook(
+                step,
+                &best,
+                if solved { Tick::Solved } else { Tick::Better },
+                &lineage,
+            );
         }
     }
-    Ok(best)
+    Ok((best, lineage))
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct Decision {
+    pub step: u32,
+    pub kept: Vec<Cargo>,
+    pub discarded: Option<Cargo>,
+    pub added: Vec<Cargo>,
+}
+
+pub(crate) fn common_len(a: &[Cargo], b: &[Cargo]) -> usize {
+    a.iter().zip(b).take_while(|(x, y)| x == y).count()
+}
+
+pub(crate) fn decide(step: u32, old: &[Cargo], new: &[Cargo]) -> Decision {
+    let k = common_len(old, new);
+    Decision {
+        step,
+        kept: new[..k].to_vec(),
+        discarded: old.get(k).copied(),
+        added: new[k..].to_vec(),
+    }
+}
+
+pub(crate) fn format_decision(d: &Decision) -> String {
+    let mut parts = Vec::new();
+    for c in &d.kept {
+        parts.push(format!("={}", c.name()));
+    }
+    if let Some(c) = d.discarded {
+        parts.push(format!("x{}", c.name()));
+    }
+    for c in &d.added {
+        parts.push(format!("+{}", c.name()));
+    }
+    if parts.is_empty() {
+        "(vacío)".into()
+    } else {
+        parts.join(" ")
+    }
+}
+
+pub(crate) fn print_lineage(lineage: &[Decision]) {
+    println!();
+    println!("linaje     ·  = se quedó  x se tiró  + se escribió");
+    if lineage.is_empty() {
+        println!("           (sin decisiones)");
+        return;
+    }
+    for d in lineage {
+        println!("  {:>4}  {}", d.step, format_decision(d));
+    }
 }
 
 fn write_local_brain(brain: &str) -> Result<(), Box<dyn Error>> {
@@ -1146,6 +1226,28 @@ mod tests {
     }
 
     #[test]
+    fn decide_keeps_prefix_and_marks_the_killed_trip() {
+        let old = parse_plan("cabra lobo").unwrap();
+        let new = parse_plan("cabra nada").unwrap();
+        let d = decide(4, &old, &new);
+        assert_eq!(d.step, 4);
+        assert_eq!(d.kept, vec![Cargo::Cabra]);
+        assert_eq!(d.discarded, Some(Cargo::Lobo));
+        assert_eq!(d.added, vec![Cargo::Nada]);
+        assert_eq!(format_decision(&d), "=cabra xlobo +nada");
+    }
+
+    #[test]
+    fn decide_append_has_no_discard() {
+        let old = parse_plan("cabra").unwrap();
+        let new = parse_plan("cabra nada").unwrap();
+        let d = decide(2, &old, &new);
+        assert!(d.discarded.is_none());
+        assert_eq!(d.kept, vec![Cargo::Cabra]);
+        assert_eq!(d.added, vec![Cargo::Nada]);
+    }
+
+    #[test]
     fn lineage_counts_daughters_not_generations() {
         assert_eq!(child_lineage("0", 0), "0.1");
         assert_eq!(child_lineage("0", 1), "0.2");
@@ -1209,5 +1311,14 @@ mod tests {
         let champ = evolve(80, 20, DEFAULT_DISH_SEED).unwrap();
         assert!(champ.run.won, "plan {}", emit_plan(&champ.plan));
         assert!(champ.plan.len() <= 11);
+    }
+
+    #[test]
+    fn seed_7_lineage_records_keep_and_discard() {
+        let (champ, lin) = evolve_with_lineage(80, 20, DEFAULT_DISH_SEED).unwrap();
+        assert!(champ.run.won);
+        assert!(!lin.is_empty());
+        assert!(lin.iter().any(|d| d.discarded.is_some()));
+        assert!(lin.iter().any(|d| !d.kept.is_empty() || !d.added.is_empty()));
     }
 }

@@ -2,7 +2,7 @@
 name = "cruzante"
 version = "0.1.0"
 edition = "2021"
-description = "Constructor que reescribe el plan donde el río lo mata."
+description = "A constructor that rewrites the plan where the river kills it."
 license = "MIT"
 publish = false
 repository = "https://github.com/PascualMacana/cruzante"

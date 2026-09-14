@@ -87,7 +87,7 @@ There is no pathfinding algorithm inside. The river never changes. This is not a
 ## Related
 
 The mold (untouched):  
-[replicante](https://github.com/PascualMacana/replicante) copies itself.  
-[mejorante](https://github.com/PascualMacana/mejorante) searches against a frozen curve.  
-[demostrante](https://github.com/PascualMacana/demostrante) only writes a claimed improvement with a checkable proof.  
-[reinante](https://github.com/PascualMacana/reinante) keeps searching because the target itself moves.
+[replicator](https://github.com/PascualMacana/replicator) copies itself.  
+[improver](https://github.com/PascualMacana/improver) searches against a frozen curve.  
+[prover](https://github.com/PascualMacana/prover) only writes a claimed improvement with a checkable proof.  
+[red-queen](https://github.com/PascualMacana/red-queen) keeps searching because the target itself moves.

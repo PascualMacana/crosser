@@ -5,7 +5,7 @@ edition = "2021"
 description = "A constructor that rewrites the plan where the river kills it."
 license = "MIT"
 publish = false
-repository = "https://github.com/PascualMacana/cruzante"
+repository = "https://github.com/PascualMacana/crosser"
 
 [[bin]]
 name = "cruzante"

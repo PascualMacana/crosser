@@ -92,4 +92,6 @@ The mold (untouched):
 [prover](https://github.com/PascualMacana/prover) only writes a claimed improvement with a checkable proof.  
 [red-queen](https://github.com/PascualMacana/red-queen) keeps searching because the target itself moves.  
 [inquirer](https://github.com/PascualMacana/inquirer) keeps the house assignments the clues did not refute.  
-[tide](https://github.com/PascualMacana/tide) is this river with eating rules that hop after a crossing.
+[tide](https://github.com/PascualMacana/tide) is this river with eating rules that hop after a crossing.  
+[sealer](https://github.com/PascualMacana/sealer) is this river with a proof: a new plan is written only if re-simulation checks.  
+[turn](https://github.com/PascualMacana/turn) keeps searching because the house clues hop.

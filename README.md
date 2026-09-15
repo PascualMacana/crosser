@@ -90,4 +90,6 @@ The mold (untouched):
 [replicator](https://github.com/PascualMacana/replicator) copies itself.  
 [improver](https://github.com/PascualMacana/improver) searches against a frozen curve.  
 [prover](https://github.com/PascualMacana/prover) only writes a claimed improvement with a checkable proof.  
-[red-queen](https://github.com/PascualMacana/red-queen) keeps searching because the target itself moves.
+[red-queen](https://github.com/PascualMacana/red-queen) keeps searching because the target itself moves.  
+[inquirer](https://github.com/PascualMacana/inquirer) keeps the house assignments the clues did not refute.  
+[tide](https://github.com/PascualMacana/tide) is this river with eating rules that hop after a crossing.
